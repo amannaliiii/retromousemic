@@ -1,143 +1,4 @@
-<!DOCTYPE html>
-<html lang="en" class="bg-void text-chalk">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Universaless | Raw Audio Node</title>
-
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;700&family=Space+Mono:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
-    <script src="https://unpkg.com/lucide@latest"></script>
-    <script src="https://cdn.tailwindcss.com"></script>
-    
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    fontFamily: {
-                        brutal: ['Oswald', 'sans-serif'],
-                        mono: ['Space Mono', 'monospace'],
-                    },
-                    colors: {
-                        void: '#000000',
-                        chalk: '#f3f4f6',
-                        zinc_raw: '#27272a',
-                        blood: '#ff0000',
-                        acid: '#39ff14',
-                    }
-                }
-            }
-        }
-    </script>
-
-    <style>
-        body { background-color: #000; color: #f3f4f6; margin: 0; overflow-x: hidden; padding-bottom: 120px; }
-        .noise-overlay {
-            position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
-            pointer-events: none; z-index: 9999; opacity: 0.08;
-            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
-        }
-        .hide-scrollbar::-webkit-scrollbar { display: none; }
-        .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
-        ::selection { background: #39ff14; color: #000; }
-    </style>
-</head>
-<body class="min-h-screen selection:bg-acid selection:text-void font-mono">
-
-    <div class="noise-overlay"></div>
-
-    <!-- Top Header / Nav -->
-    <header class="sticky top-0 z-50 bg-void border-b-2 border-chalk">
-        <div class="w-full px-4 md:px-8 h-16 flex items-center justify-between">
-            <h1 class="font-brutal font-bold text-2xl tracking-tighter uppercase text-acid">UNI.AUDIO</h1>
-            
-            <div class="flex items-center gap-4">
-                <input type="text" id="searchInput" placeholder="Search track/artist..." onkeypress="handleSearch(event)"
-                    class="bg-void border border-zinc_raw text-chalk font-mono text-xs px-3 py-1.5 focus:outline-none focus:border-acid w-36 md:w-64">
-                <div class="font-mono text-[10px] uppercase tracking-widest border border-chalk px-2 py-1 hidden sm:block">
-                    NODE // ACTIVE
-                </div>
-            </div>
-        </div>
-    </header>
-
-    <!-- Main Content Area -->
-    <main class="w-full max-w-7xl mx-auto p-4 md:p-8 space-y-8">
-        
-        <!-- Featured Banner -->
-        <section class="border-2 border-chalk p-6 md:p-10 relative bg-void overflow-hidden group">
-            <div class="absolute top-0 right-0 w-32 h-32 bg-acid/10 rounded-full blur-3xl pointer-events-none"></div>
-            <div class="relative z-10 flex flex-col md:flex-row justify-between items-start md:items-end gap-6">
-                <div>
-                    <span class="border border-acid text-acid font-mono text-[10px] uppercase px-2 py-1 tracking-widest">Global Stream</span>
-                    <h2 class="font-brutal font-bold text-4xl md:text-6xl tracking-tight uppercase mt-3">Raw Cyber Frequencies</h2>
-                    <p class="font-mono text-xs md:text-sm text-gray-400 mt-2 max-w-xl uppercase">
-                        Direct connection to public audio databases. Zero latency. Pure sound waves extracted from the grid.
-                    </p>
-                </div>
-                <button onclick="loadTrendingTracks()" class="border-2 border-acid bg-acid text-void font-brutal uppercase text-base px-6 py-2.5 cursor-pointer hover:bg-void hover:text-acid transition-none">
-                    Refresh Feed
-                </button>
-            </div>
-        </section>
-
-        <!-- Playlist Grid Section -->
-        <section class="space-y-4">
-            <div class="flex items-center justify-between border-b border-zinc_raw pb-2">
-                <h3 class="font-mono text-xs md:text-sm uppercase tracking-[0.3em] text-gray-400">> Active_Tracks_Database</h3>
-                <span id="trackCount" class="font-mono text-xs text-acid">00 Tracks</span>
-            </div>
-
-            <div id="trackGrid" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-                <!-- Tracks will be injected here dynamically -->
-                <p class="font-mono text-xs text-gray-500 col-span-full">CONNECTING TO AUDIO NODES...</p>
-            </div>
-        </section>
-    </main>
-
-    <!-- Sticky Bottom Music Player Console -->
-    <div id="playerConsole" class="fixed bottom-0 left-0 w-full bg-void border-t-2 border-chalk p-4 z-50 flex flex-col md:flex-row items-center justify-between gap-4 shadow-2xl">
-        
-        <!-- Track Meta -->
-        <div class="flex items-center gap-3 w-full md:w-1/4">
-            <div class="w-12 h-12 border border-zinc_raw bg-zinc-900 shrink-0 overflow-hidden">
-                <img id="playerImg" src="https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?q=80&w=200&auto=format&fit=crop" alt="Art" class="w-full h-full object-cover">
-            </div>
-            <div class="overflow-hidden">
-                <h4 id="playerTitle" class="font-brutal text-sm uppercase truncate text-chalk">Select a track</h4>
-                <p id="playerArtist" class="font-mono text-[10px] text-gray-400 uppercase truncate">Unknown Artist</p>
-            </div>
-        </div>
-
-        <!-- Player Controls & Progress -->
-        <div class="flex flex-col items-center w-full md:w-2/4 gap-2">
-            <div class="flex items-center gap-6">
-                <button onclick="prevTrack()" class="text-gray-400 hover:text-chalk transition-none"><i data-lucide="skip-back" class="w-5 h-5"></i></button>
-                <button onclick="togglePlay()" id="playPauseBtn" class="border-2 border-chalk p-2 bg-chalk text-void hover:bg-acid hover:border-acid transition-none">
-                    <i data-lucide="play" id="playIcon" class="w-5 h-5 fill-void"></i>
-                </button>
-                <button onclick="nextTrack()" class="text-gray-400 hover:text-chalk transition-none"><i data-lucide="skip-forward" class="w-5 h-5"></i></button>
-            </div>
-            
-            <div class="w-full flex items-center gap-3">
-                <span id="currentTime" class="font-mono text-[10px] text-gray-500">0:00</span>
-                <input type="range" id="progressBar" value="0" max="100" class="w-full accent-acid cursor-pointer h-1 bg-zinc_raw rounded-none" oninput="seekAudio(this.value)">
-                <span id="durationTime" class="font-mono text-[10px] text-gray-500">0:00</span>
-            </div>
-        </div>
-
-        <!-- Volume & Extra -->
-        <div class="flex items-center gap-3 w-full md:w-1/4 justify-end">
-            <i data-lucide="volume-2" class="w-4 h-4 text-gray-400"></i>
-            <input type="range" min="0" max="1" step="0.01" value="1" class="w-20 accent-acid cursor-pointer h-1 bg-zinc_raw rounded-none" oninput="setVolume(this.value)">
-        </div>
-    </div>
-
-    <!-- Hidden Audio Element -->
-    <audio id="audioElement" ontimeupdate="updateProgress()" onended="nextTrack()"></audio>
-
-    <script>
+<script>
         lucide.createIcons();
 
         let tracks = [];
@@ -145,38 +6,43 @@
         const audio = document.getElementById('audioElement');
         const playIcon = document.getElementById('playIcon');
 
-        // Fetch Free Tracks from Jamendo Public API (No key required for basic feed)
         async function loadTrendingTracks(query = '') {
             const grid = document.getElementById('trackGrid');
             grid.innerHTML = '<p class="font-mono text-xs text-gray-500 col-span-full">EXTRACTING AUDIO STREAMS...</p>';
 
-            // Jamendo API endpoint for free music tracks
-            let url = `https://api.jamendo.com/v3.0/tracks/?client_id=599eedee&format=json&limit=20&audioformat=mp31&fuzzytags=rock+electronic+chillout+pop`;
+            let apiUrl = `https://api.jamendo.com/v3.0/tracks/?client_id=599eedee&format=json&limit=20&audioformat=mp31&fuzzytags=rock+electronic+chillout+pop`;
             if(query) {
-                url = `https://api.jamendo.com/v3.0/tracks/?client_id=599eedee&format=json&limit=20&search=${encodeURIComponent(query)}&audioformat=mp31`;
+                apiUrl = `https://api.jamendo.com/v3.0/tracks/?client_id=599eedee&format=json&limit=20&search=${encodeURIComponent(query)}&audioformat=mp31`;
             }
 
+            const proxyURL = `https://api.allorigins.win/get?url=${encodeURIComponent(apiUrl)}`;
+
             try {
-                const response = await fetch(url);
-                const data = await response.json();
+                const response = await fetch(proxyURL);
+                const wrapper = await response.json();
+                const data = JSON.parse(wrapper.contents);
                 
                 if(data.results && data.results.length > 0) {
                     tracks = data.results;
                     document.getElementById('trackCount').innerText = `${tracks.length} Tracks`;
                     renderTracks();
                 } else {
-                    grid.innerHTML = '<p class="font-mono text-xs text-blood col-span-full">NO AUDIO FREQUENCIES FOUND.</p>';
+                    loadFallbackTracks();
                 }
             } catch (error) {
-                // Fallback dummy tracks if API rate limit hits, so app never breaks
-                tracks = [
-                    { name: "Cyber Void Anthem", artist_name: "Null Sector", image: "https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?q=80&w=400&auto=format&fit=crop", audio: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3" },
-                    { name: "Neon District Run", artist_name: "Voxel Grid", image: "https://images.unsplash.com/photo-1514525253161-7a46d19cd819?q=80&w=400&auto=format&fit=crop", audio: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3" },
-                    { name: "Static Overload", artist_name: "Glitch Syntax", image: "https://images.unsplash.com/photo-1470225620780-dba8ba36b745?q=80&w=400&auto=format&fit=crop", audio: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-3.mp3" },
-                    { name: "Subterranean Bass", artist_name: "Deep Core", image: "https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?q=80&w=400&auto=format&fit=crop", audio: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-4.mp3" }
-                ];
-                renderTracks();
+                loadFallbackTracks();
             }
+        }
+
+        function loadFallbackTracks() {
+            tracks = [
+                { name: "Cyber Void Anthem", artist_name: "Null Sector", image: "https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?q=80&w=400&auto=format&fit=crop", audio: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3" },
+                { name: "Neon District Run", artist_name: "Voxel Grid", image: "https://images.unsplash.com/photo-1514525253161-7a46d19cd819?q=80&w=400&auto=format&fit=crop", audio: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3" },
+                { name: "Static Overload", artist_name: "Glitch Syntax", image: "https://images.unsplash.com/photo-1470225620780-dba8ba36b745?q=80&w=400&auto=format&fit=crop", audio: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-3.mp3" },
+                { name: "Subterranean Bass", artist_name: "Deep Core", image: "https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?q=80&w=400&auto=format&fit=crop", audio: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-4.mp3" }
+            ];
+            document.getElementById('trackCount').innerText = `${tracks.length} Tracks`;
+            renderTracks();
         }
 
         function renderTracks() {
@@ -278,8 +144,5 @@
             }
         }
 
-        // Initialize App Feed on load
         loadTrendingTracks();
     </script>
-</body>
-</html>
